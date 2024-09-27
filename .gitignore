@@ -1,1 +1,53 @@
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+venv/
+env/
+.venv/
+.env/
 .vercel
+
+# Logs
+*.log
+
+# Data files
+*.sqlite3
+
+# Compiled C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+.wheelhouse/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Environment variables
+.env
+*.env
+
+# IDE settings
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Other files you may want to ignore
+*.db

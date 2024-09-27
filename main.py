@@ -5,7 +5,8 @@ from uuid import uuid4
 
 app = FastAPI()
 
-# Data models
+# Data modelsvercel --prod
+
 class Student(BaseModel):
     id: Optional[str] = None
     name: str
