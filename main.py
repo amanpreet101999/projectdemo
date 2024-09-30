@@ -10,12 +10,9 @@ import os
 app = FastAPI()
 
 
-# DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:1234@localhost:5432/students")
+DATABASE_URL = os.getenv("VERCEL_ENV", "postgresql://postgres:1234@localhost:5432/students")
 # 
 # Database connection settings (use your Vercel PostgreSQL connection string)
-DATABASE_URL = "postgres://default:SCWG8BTIXPJ1@ep-black-violet-a4y9eozk.us-east-1.aws.neon.tech:5432/verceldb?sslmode=require""
-
-
 # DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://students_owner:cnxwuJfr64YE@ep-billowing-hall-a5aq634s.us-east-2.aws.neon.tech/students?sslmode=require")
 
 
@@ -32,6 +29,7 @@ class StudentModel(Base):
     age = Column(Integer)
     email = Column(String, unique=True, index=True)
     gpa = Column(Float)
+
 
 # SQLAlchemy Teacher model
 class TeacherModel(Base):
