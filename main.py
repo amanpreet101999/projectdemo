@@ -9,6 +9,7 @@ from uuid import uuid4
 # Database connection settings
 SQLALCHEMY_DATABASE_URL = "postgresql://postgres:1234@localhost:5432/students"
 
+
 # SQLAlchemy setup
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
