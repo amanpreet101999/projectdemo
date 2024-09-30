@@ -5,9 +5,13 @@ from sqlalchemy import create_engine, Column, String, Integer, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from uuid import uuid4
+import os
 
 # Database connection settings
-DATABASE_URL = "postgresql://postgres:1234@localhost:5432/students"
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:1234@localhost:5432/students")
+
+# Database connection settings
+# DATABASE_URL = "postgresql://postgres:1234@localhost:5432/students"
 
 # SQLAlchemy setup
 engine = create_engine(DATABASE_URL)

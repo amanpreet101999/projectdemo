@@ -2,3 +2,5 @@ fastapi==0.95.2  # or the version you're using
 uvicorn==0.22.0  # for serving the FastAPI app
 wheel  # Ensure wheel is included
 setuptools  # Ensure setuptools is included
+sqlalchemy
+psycopg2-binary
