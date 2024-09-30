@@ -5,20 +5,16 @@ from sqlalchemy import create_engine, Column, String, Integer, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from uuid import uuid4
-import os
 
-# Database connection settings
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:1234@localhost:5432/students")
+app = FastAPI()
 
-# Database connection settings
-# DATABASE_URL = "postgresql://postgres:1234@localhost:5432/students"
+# Database connection settings (use your Vercel PostgreSQL connection string)
+DATABASE_URL = "postgres://default:SCWG8BTIXPJ1@ep-black-violet-a4y9eozk.us-east-1.aws.neon.tech:5432/verceldb?sslmode=require"
 
 # SQLAlchemy setup
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
-
-app = FastAPI()
 
 # SQLAlchemy Student model
 class StudentModel(Base):
