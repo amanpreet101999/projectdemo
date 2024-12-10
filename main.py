@@ -1,25 +1,43 @@
 from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Optional
-from sqlalchemy import create_engine, Column, String, Integer, Float
+from sqlalchemy import create_engine, Column, String, Integer, Float, Table, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker, Session, relationship
 from uuid import uuid4
+from fastapi.middleware.cors import CORSMiddleware
 import os
 
 app = FastAPI()
 
+# Configure CORS
+origins = [
+    "https://studentdemo-sand.vercel.app",  # Your deployed frontend
+    "http://localhost:3000",                # Allow local development
+]
 
-DATABASE_URL = os.getenv("VERCEL_ENV", "postgresql://postgres:1234@localhost:5432/students")
-# 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # List of allowed origins
+    allow_credentials=True,
+    allow_methods=["*"],    # Allows all HTTP methods
+    allow_headers=["*"],    # Allows all headers
+)
+
 # Database connection settings (use your Vercel PostgreSQL connection string)
-# DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://students_owner:cnxwuJfr64YE@ep-billowing-hall-a5aq634s.us-east-2.aws.neon.tech/students?sslmode=require")
-
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://students_owner:cnxwuJfr64YE@ep-billowing-hall-a5aq634s.us-east-2.aws.neon.tech/students?sslmode=require")
 
 # SQLAlchemy setup
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+
+# Association table for many-to-many relationship between students and teachers
+student_teacher_association = Table(
+    'student_teacher', Base.metadata,
+    Column('student_id', String, ForeignKey('students.id')),
+    Column('teacher_id', String, ForeignKey('teachers.id'))
+)
 
 # SQLAlchemy Student model
 class StudentModel(Base):
@@ -30,6 +48,12 @@ class StudentModel(Base):
     email = Column(String, unique=True, index=True)
     gpa = Column(Float)
 
+    # Many-to-many relationship with TeacherModel
+    teachers = relationship(
+        "TeacherModel",
+        secondary=student_teacher_association,
+        back_populates="students"
+    )
 
 # SQLAlchemy Teacher model
 class TeacherModel(Base):
@@ -39,6 +63,13 @@ class TeacherModel(Base):
     age = Column(Integer)
     email = Column(String, unique=True, index=True)
     subject = Column(String)
+
+    # Many-to-many relationship with StudentModel
+    students = relationship(
+        "StudentModel",
+        secondary=student_teacher_association,
+        back_populates="teachers"
+    )
 
 # Create the database tables
 Base.metadata.create_all(bind=engine)
@@ -50,6 +81,7 @@ class Student(BaseModel):
     age: int
     email: str
     gpa: float
+    teachers: Optional[List[str]] = []  # List of teacher IDs
 
 # Pydantic schema for Teacher
 class Teacher(BaseModel):
@@ -58,6 +90,7 @@ class Teacher(BaseModel):
     age: int
     email: str
     subject: str
+    students: Optional[List[str]] = []  # List of student IDs
 
 # Dependency to get DB session
 def get_db():
@@ -123,6 +156,29 @@ def delete_student(student_id: str, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Student deleted successfully"}
 
+# Assign a teacher to a student
+@app.post("/students/{student_id}/assign_teacher/{teacher_id}")
+def assign_teacher_to_student(student_id: str, teacher_id: str, db: Session = Depends(get_db)):
+    student = db.query(StudentModel).filter(StudentModel.id == student_id).first()
+    teacher = db.query(TeacherModel).filter(TeacherModel.id == teacher_id).first()
+    
+    if not student or not teacher:
+        raise HTTPException(status_code=404, detail="Student or Teacher not found")
+    
+    student.teachers.append(teacher)
+    db.commit()
+    
+    return {"message": f"Teacher {teacher_id} assigned to student {student_id} successfully"}
+
+# Get a specific student with their teachers
+@app.get("/students/{student_id}/with_teachers", response_model=Student)
+def get_student_with_teachers(student_id: str, db: Session = Depends(get_db)):
+    student = db.query(StudentModel).filter(StudentModel.id == student_id).first()
+    if student is None:
+        raise HTTPException(status_code=404, detail="Student not found")
+    
+    return student
+
 # CRUD for Teachers
 
 # Create a new teacher registration
@@ -178,3 +234,27 @@ def delete_teacher(teacher_id: str, db: Session = Depends(get_db)):
     db.delete(teacher)
     db.commit()
     return {"message": "Teacher deleted successfully"}
+
+# Assign a student to a teacher
+@app.post("/teachers/{teacher_id}/assign_student/{student_id}")
+def assign_student_to_teacher(teacher_id: str, student_id: str, db: Session = Depends(get_db)):
+    teacher = db.query(TeacherModel).filter(TeacherModel.id == teacher_id).first()
+    student = db.query(StudentModel).filter(StudentModel.id == student_id).first()
+    
+    if not student or not teacher:
+        raise HTTPException(status_code=404, detail="Student or Teacher not found")
+    
+    teacher.students.append(student)
+    db.commit()
+    
+    return {"message": f"Student {student_id} assigned to teacher {teacher_id} successfully"}
+
+# Get a specific teacher with their students
+@app.get("/teachers/{teacher_id}/with_students", response_model=Teacher)
+def get_teacher_with_students(teacher_id: str, db: Session = Depends(get_db)):
+    teacher = db.query(TeacherModel).filter(TeacherModel.id == teacher_id).first()
+    if teacher is None:
+        raise HTTPException(status_code=404, detail="Teacher not found")
+    
+    return teacher
+
